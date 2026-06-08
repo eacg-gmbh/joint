@@ -61,8 +61,8 @@ jobs:
           git diff --cached --quiet && echo "SBOM unchanged, skipping commit" || \
             git commit -m "chore: update SBOM (CycloneDX)" && git push
 
-      # Upload to TrustSource and check for vulnerabilities
-      - name: Upload to TrustSource & check vulnerabilities
+      # Check for vulnerabilities (gate — fails the build)
+      - name: Check vulnerabilities
         run: |
           ts-scan check \
             --exit-on-vulns \
@@ -70,6 +70,21 @@ jobs:
             --api-key ${{ secrets.TS_API_KEY }} \
             --project ts-jointJS \
             -o scan-results.json \
+            SBOM.cdx.json
+
+      # Import SBOM to TrustSource with branch/tag context
+      - name: Import SBOM to TrustSource
+        run: |
+          ts-scan import \
+            -f cyclonedx \
+            -v 1.5 \
+            --module joint-dfd \
+            --module-id joint-dfd \
+            --branch ${{ github.ref_name }} \
+            --tag ${{ github.sha }} \
+            --base-url https://api.trustsource.io \
+            --api-key ${{ secrets.TS_API_KEY }} \
+            --project-name ts-jointJS \
             SBOM.cdx.json
 
       - name: Upload scan results
