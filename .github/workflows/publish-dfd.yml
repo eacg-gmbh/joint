@@ -1,0 +1,42 @@
+name: Publish @joint/dfd to GitHub Packages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'packages/joint-dfd/**'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '@eacg-gmbh'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build @joint/dfd
+        run: yarn workspace @joint/dfd build
+        continue-on-error: false
+
+      - name: Test @joint/dfd
+        run: yarn workspace @joint/dfd test
+        continue-on-error: false
+
+      - name: Publish to GitHub Packages
+        working-directory: packages/joint-dfd
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
