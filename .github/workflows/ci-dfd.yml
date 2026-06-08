@@ -1,0 +1,116 @@
+name: CI — Build, Scan & Upload (@joint/dfd)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'packages/joint-dfd/**'
+      - 'package.json'
+      - 'yarn.lock'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'packages/joint-dfd/**'
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --immutable
+      - run: yarn workspace @joint/dfd build
+      - run: yarn workspace @joint/dfd test
+
+  sca-scan:
+    name: SCA Scan (ts-scan → TrustSource)
+    needs: build-and-test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      - name: Install ts-scan
+        run: pip install ts-scan
+
+      # Generate SBOM in CycloneDX format (scan from joint-dfd package)
+      - name: Generate SBOM (CycloneDX)
+        run: ts-scan scan -o SBOM.cdx.json -f cyclonedx-json packages/joint-dfd
+
+      # Commit SBOM to repo
+      - name: Commit SBOM to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add SBOM.cdx.json
+          git diff --cached --quiet && echo "SBOM unchanged, skipping commit" || \
+            git commit -m "chore: update SBOM (CycloneDX)" && git push
+
+      # Upload to TrustSource and check for vulnerabilities
+      - name: Upload to TrustSource & check vulnerabilities
+        run: |
+          ts-scan check \
+            --exit-on-vulns \
+            --base-url https://api.trustsource.io \
+            --api-key ${{ secrets.TS_API_KEY }} \
+            --project ts-jointJS \
+            -o scan-results.json \
+            SBOM.cdx.json
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-scan-results
+          path: scan-results.json
+
+  sast-scan:
+    name: SAST Scan (Semgrep → SARIF → TrustSource)
+    needs: sca-scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config auto \
+            --sarif \
+            --output semgrep-results.sarif \
+            packages/joint-dfd/src/ \
+          || true
+
+      - name: Upload SARIF to TrustSource
+        run: |
+          curl -s -f -X POST \
+            "https://api.trustsource.io/api/v2/core/tests/sarif/json?projectName=ts-jointJS&moduleName=joint-dfd" \
+            -H "x-apikey: ${{ secrets.TS_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d @semgrep-results.sarif
+        continue-on-error: true
+
+      - name: Upload Semgrep results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-scan-results
+          path: semgrep-results.sarif

@@ -35,8 +35,36 @@ jobs:
         run: yarn workspace @joint/dfd test
         continue-on-error: false
 
+      # Extract version from package.json for release tracking
+      - name: Read package version
+        id: pkg
+        working-directory: packages/joint-dfd
+        run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
+
       - name: Publish to GitHub Packages
         working-directory: packages/joint-dfd
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Register release in TrustSource via SBOM import
+      - name: Install ts-scan
+        run: pip install ts-scan
+
+      - name: Generate SBOM (CycloneDX)
+        run: ts-scan scan -o SBOM.cdx.json -f cyclonedx-json packages/joint-dfd
+
+      - name: Import SBOM to TrustSource with release tag
+        run: |
+          ts-scan import \
+            -f cyclonedx \
+            -v 1.5 \
+            --module joint-dfd \
+            --module-id joint-dfd \
+            --release "v${{ steps.pkg.outputs.version }}" \
+            --tag "v${{ steps.pkg.outputs.version }}" \
+            --branch master \
+            --base-url https://api.trustsource.io \
+            --api-key ${{ secrets.TS_API_KEY }} \
+            --project-name ts-jointJS \
+            SBOM.cdx.json
