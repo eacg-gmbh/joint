@@ -1,0 +1,42 @@
+otmVersion: "0.2.0"
+project:
+  name: "Sample Project"
+  id: "sample-project"
+trustZones:
+  - id: "internet"
+    name: "Internet"
+    type: "public"
+    risk: { trustRating: 20 }
+  - id: "private"
+    name: "Private Network"
+    type: "private"
+    risk: { trustRating: 100 }
+components:
+  - id: "web-client"
+    name: "Browser"
+    type: "web-client"
+    parent: { trustZone: "internet" }
+  - id: "web-service"
+    name: "API Server"
+    type: "web-service"
+    parent: { trustZone: "private" }
+  - id: "database"
+    name: "Customer DB"
+    type: "database"
+    parent: { trustZone: "private" }
+dataflows:
+  - id: "client-to-api"
+    name: "HTTPS requests"
+    source: "web-client"
+    destination: "web-service"
+    assets: ["user-data"]
+  - id: "api-to-db"
+    name: "SQL queries"
+    source: "web-service"
+    destination: "database"
+    assets: ["customer-records"]
+threats:
+  - id: "t-sqli"
+    name: "SQL Injection"
+    categories: ["Tampering"]
+    risk: { likelihood: 60, impact: 90 }

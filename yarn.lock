@@ -4871,6 +4871,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@joint/dfd@workspace:packages/joint-dfd":
+  version: 0.0.0-use.local
+  resolution: "@joint/dfd@workspace:packages/joint-dfd"
+  dependencies:
+    "@joint/core": "workspace:~"
+    "@joint/eslint-config": "workspace:*"
+    eslint: "npm:9.39.2"
+  languageName: unknown
+  linkType: soft
+
 "@joint/eslint-config@workspace:*, @joint/eslint-config@workspace:packages/joint-eslint-config":
   version: 0.0.0-use.local
   resolution: "@joint/eslint-config@workspace:packages/joint-eslint-config"
