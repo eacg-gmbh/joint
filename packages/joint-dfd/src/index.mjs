@@ -25,6 +25,7 @@ export {
 
 export { otmToGraph } from './otm-adapter/otmToGraph.mjs';
 export { graphToOtm } from './otm-adapter/graphToOtm.mjs';
+export { applyThreatOverlay, clearThreatOverlay } from './otm-adapter/threatOverlay.mjs';
 
 // Namespace object suitable for use as JointJS `cellNamespace.dfd`.
 // The keys must match the second segment of the cell type (e.g. "dfd.ProcessShape").
