@@ -34,7 +34,8 @@
     "./README.md"
   ],
   "dependencies": {
-    "@joint/core": "workspace:~"
+    "@joint/core": "workspace:~",
+    "elkjs": "0.11.1"
   },
   "devDependencies": {
     "@joint/eslint-config": "workspace:*",

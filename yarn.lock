@@ -4877,6 +4877,7 @@ __metadata:
   dependencies:
     "@joint/core": "workspace:~"
     "@joint/eslint-config": "workspace:*"
+    elkjs: "npm:0.11.1"
     eslint: "npm:9.39.2"
   languageName: unknown
   linkType: soft
@@ -13618,6 +13619,13 @@ __metadata:
   version: 1.5.286
   resolution: "electron-to-chromium@npm:1.5.286"
   checksum: 10/530ae36571f3f737431dc1f97ab176d9ec38d78e7a14a78fff78540769ef139e9011200a886864111ee26d64e647136531ff004f368f5df8cdd755c45ad97649
+  languageName: node
+  linkType: hard
+
+"elkjs@npm:0.11.1":
+  version: 0.11.1
+  resolution: "elkjs@npm:0.11.1"
+  checksum: 10/876cee0504239956a40f3925f3a640ce0ad6e0e6f394ec1b627ce5b2ed2ccef8bd0467d054f644d9381d584b6fd13071b4060849e798db6e62bc97595493a6e1
   languageName: node
   linkType: hard
 

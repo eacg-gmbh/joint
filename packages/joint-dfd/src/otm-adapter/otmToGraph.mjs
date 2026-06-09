@@ -127,10 +127,15 @@ export function otmToGraph(otm, graph, options = {}) {
 
     // 4. Run auto-layout when no positions were supplied (default), or when
     //    the caller explicitly asked for it.
+    // elkLayout is async; we fire-and-forget here so otmToGraph stays synchronous.
+    // Callers that need guaranteed positions should await elkLayout(graph) directly.
     const shouldAutoLayout = options.autoLayout !== undefined
         ? !!options.autoLayout
         : !anyPosition;
-    if (shouldAutoLayout) elkLayout(graph, options);
+    if (shouldAutoLayout) {
+        const p = elkLayout(graph, options);
+        if (p && typeof p.then === 'function') p.catch(() => {});
+    }
 
     return { trustZones: trustZoneCells, components: componentCells, dataflows: dataflowCells };
 }
