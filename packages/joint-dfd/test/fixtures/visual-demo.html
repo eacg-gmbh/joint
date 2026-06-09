@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>@joint/dfd — visual demo</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 20px; background: #FAFAFA; }
+        h1 { margin: 0 0 4px; font-size: 18px; }
+        p  { margin: 0 0 16px; color: #555; font-size: 13px; }
+        #paper { background: #FFFFFF; border: 1px solid #E0E0E0; }
+    </style>
+</head>
+<body>
+    <h1>@joint/dfd — DFD shape library (DFD-02)</h1>
+    <p>
+        All six shapes on a single Paper: ProcessShape, DataStoreShape, ExternalEntityShape,
+        TrustZoneContainer, DataFlowLink and ThreatBadge.
+    </p>
+    <div id="paper"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "@joint/core": "../../../joint-core/joint.mjs",
+            "@joint/dfd":  "../../src/index.mjs"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as joint from '@joint/core';
+        import {
+            ProcessShape,
+            DataStoreShape,
+            ExternalEntityShape,
+            TrustZoneContainer,
+            DataFlowLink,
+            ThreatBadge,
+            shapes,
+            registerShapes
+        } from '@joint/dfd';
+
+        registerShapes(joint);
+        const cellNamespace = joint.shapes;
+
+        const graph = new joint.dia.Graph({}, { cellNamespace });
+        const paper = new joint.dia.Paper({
+            el: document.getElementById('paper'),
+            model: graph,
+            width: 960,
+            height: 520,
+            gridSize: 10,
+            cellViewNamespace: cellNamespace,
+            embeddingMode: true,
+            defaultLink: () => new DataFlowLink(),
+            validateEmbedding: (childView, parentView) => parentView.model instanceof TrustZoneContainer,
+            validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => sourceMagnet !== targetMagnet
+        });
+
+        // Trust zone (background container).
+        const zone = new TrustZoneContainer({
+            position: { x: 220, y: 80 },
+            size: { width: 520, height: 380 },
+            trustRating: 70
+        });
+        zone.setZoneName('Application VPC');
+        zone.addTo(graph);
+
+        // External entity outside the trust zone.
+        const browser = new ExternalEntityShape({ position: { x: 40, y: 220 } });
+        browser.setName('Browser');
+        browser.addTo(graph);
+
+        // External service variant — dashed border.
+        const partner = new ExternalEntityShape({ position: { x: 40, y: 360 } });
+        partner.setName('Partner API');
+        partner.setDashed(true);
+        partner.addTo(graph);
+
+        // Process inside the trust zone.
+        const api = new ProcessShape({ position: { x: 280, y: 200 } });
+        api.setName('API Gateway');
+        api.addTo(graph);
+        zone.embed(api);
+
+        const auth = new ProcessShape({ position: { x: 460, y: 130 } });
+        auth.setName('Auth Service');
+        auth.addTo(graph);
+        zone.embed(auth);
+
+        // Data store inside the trust zone.
+        const users = new DataStoreShape({ position: { x: 460, y: 300 } });
+        users.setName('Users DB');
+        users.addTo(graph);
+        zone.embed(users);
+
+        // Data flows.
+        const flow1 = new DataFlowLink({
+            source: { id: browser.id, port: 'out' },
+            target: { id: api.id, port: 'in' }
+        });
+        flow1.setAssetNames(['credentials']);
+        flow1.addTo(graph);
+
+        const flow2 = new DataFlowLink({
+            source: { id: api.id, port: 'out' },
+            target: { id: auth.id, port: 'in' }
+        });
+        flow2.setAssetNames(['jwt']);
+        flow2.addTo(graph);
+
+        const flow3 = new DataFlowLink({
+            source: { id: auth.id, port: 'out' },
+            target: { id: users.id, port: 'in' }
+        });
+        flow3.setAssetNames(['user_id', 'session']);
+        flow3.addTo(graph);
+
+        // Bidirectional flow.
+        const flow4 = new DataFlowLink({
+            source: { id: api.id, port: 'out' },
+            target: { id: partner.id, port: 'in' }
+        });
+        flow4.setAssetNames(['order']);
+        flow4.setBidirectional(true);
+        flow4.addTo(graph);
+
+        // Threat badges on elements and on a link.
+        ThreatBadge.attach(api.findView(paper), { count: 3, state: 'identified' });
+        ThreatBadge.attach(users.findView(paper), { count: 1, state: 'assessed' });
+        ThreatBadge.attach(auth.findView(paper), { count: 2, state: 'closed' });
+        ThreatBadge.attach(flow1.findView(paper), { count: 1, state: 'exposed' });
+
+        // Badge click handler proves the event fires with the host id.
+        paper.on('badge:pointerclick', (hostId) => {
+            console.log('Threat badge clicked on', hostId);
+        });
+    </script>
+</body>
+</html>

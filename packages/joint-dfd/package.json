@@ -23,9 +23,9 @@
     "access": "public"
   },
   "scripts": {
-    "dist": "echo 'No dist step in scaffold — Rollup build added in DFD-02'",
-    "build": "echo 'No build step in scaffold — Rollup build added in DFD-02'",
-    "test": "node --test test/index.test.mjs",
+    "dist": "echo '@joint/dfd ships source-only ESM (.mjs); a bundle step lands when a consumer requires it.'",
+    "build": "echo '@joint/dfd ships source-only ESM (.mjs); a bundle step lands when a consumer requires it.'",
+    "test": "node --test --test-reporter=spec 'test/**/*.test.mjs'",
     "lint": "eslint .",
     "lint-fix": "yarn run lint --fix"
   },
