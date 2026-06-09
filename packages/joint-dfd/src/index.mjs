@@ -1,5 +1,5 @@
 // Public API for @joint/dfd.
-// Shapes land in DFD-02 (this increment); OTM adapter in inc-2; ELK layout in inc-3.
+// Shapes land in DFD-02; OTM adapter (otmToGraph) in DFD-03; ELK layout in DFD-05.
 
 export const version = '0.1.0';
 
@@ -9,6 +9,7 @@ import { ExternalEntityShape } from './shapes/ExternalEntityShape.mjs';
 import { TrustZoneContainer, trustRatingToFill } from './shapes/TrustZoneContainer.mjs';
 import { DataFlowLink } from './shapes/DataFlowLink.mjs';
 import { ThreatBadge, badgeColourForState } from './shapes/ThreatBadge.mjs';
+import { elkLayout } from './layout/elkLayout.mjs';
 
 export {
     ProcessShape,
@@ -18,8 +19,11 @@ export {
     DataFlowLink,
     ThreatBadge,
     trustRatingToFill,
-    badgeColourForState
+    badgeColourForState,
+    elkLayout
 };
+
+export { otmToGraph } from './otm-adapter/otmToGraph.mjs';
 
 // Namespace object suitable for use as JointJS `cellNamespace.dfd`.
 // The keys must match the second segment of the cell type (e.g. "dfd.ProcessShape").
@@ -33,23 +37,9 @@ export const shapes = {
 };
 
 // OTM component sub-type → shape class. Unknown types fall back to ProcessShape.
-export const TYPE_TO_SHAPE = {
-    'web-client':       ExternalEntityShape,
-    'human-actor':      ExternalEntityShape,
-    'external-service': ExternalEntityShape,
-    'web-service':      ProcessShape,
-    'api-gateway':      ProcessShape,
-    'function':         ProcessShape,
-    'iam-service':      ProcessShape,
-    'message-broker':   ProcessShape,
-    'database':         DataStoreShape,
-    'object-store':     DataStoreShape
-};
-
-// Resolve a component type to a shape class, falling back to ProcessShape.
-export function shapeForType(type) {
-    return TYPE_TO_SHAPE[type] || ProcessShape;
-}
+// Lives in otm-adapter/typeMap.mjs to keep the OTM adapter free of cycles with
+// this index module; re-exported here as part of the public API.
+export { TYPE_TO_SHAPE, shapeForType } from './otm-adapter/typeMap.mjs';
 
 // Attach the dfd shapes onto a joint module's `shapes` namespace so the graph
 // can deserialize cells by their `type` field.
