@@ -1,5 +1,6 @@
 // Public API for @joint/dfd.
 // Shapes land in DFD-02; OTM adapter (otmToGraph) in DFD-03; ELK layout in DFD-05.
+// Threat overlay in DFD-05; Vulnerability overlay in DFD-06.
 
 export const version = '0.1.0';
 
@@ -9,6 +10,7 @@ import { ExternalEntityShape } from './shapes/ExternalEntityShape.mjs';
 import { TrustZoneContainer, trustRatingToFill } from './shapes/TrustZoneContainer.mjs';
 import { DataFlowLink } from './shapes/DataFlowLink.mjs';
 import { ThreatBadge, badgeColourForState } from './shapes/ThreatBadge.mjs';
+import { VulnerabilityLabel, labelColourForSeverity } from './shapes/VulnerabilityLabel.mjs';
 import { elkLayout } from './layout/elkLayout.mjs';
 
 export {
@@ -18,14 +20,17 @@ export {
     TrustZoneContainer,
     DataFlowLink,
     ThreatBadge,
+    VulnerabilityLabel,
     trustRatingToFill,
     badgeColourForState,
+    labelColourForSeverity,
     elkLayout
 };
 
 export { otmToGraph } from './otm-adapter/otmToGraph.mjs';
 export { graphToOtm } from './otm-adapter/graphToOtm.mjs';
 export { applyThreatOverlay, clearThreatOverlay } from './otm-adapter/threatOverlay.mjs';
+export { applyVulnerabilityOverlay, clearVulnerabilityOverlay } from './otm-adapter/vulnerabilityOverlay.mjs';
 
 // Namespace object suitable for use as JointJS `cellNamespace.dfd`.
 // The keys must match the second segment of the cell type (e.g. "dfd.ProcessShape").
