@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write # the re-review job pushes an empty commit to retrigger Paul
+  pull-requests: read # the re-review job reads PR details (head ref, body) via `gh api .../pulls/{n}`
 
 jobs:
   agent:
